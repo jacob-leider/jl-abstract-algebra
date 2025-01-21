@@ -170,14 +170,91 @@ def degree_n_sparse_monomial(n):
   m[n] = 1
   return m
 
-def degree_n_monomial(n):
-  """
-  Returns the coefficient list of a monic monomial of degree n.
 
-  Args:
-    n (int): The degree of the monomial.
+class PolySparse:
+  def __init__(
+      self,
+      coeffs: dict[int, int],
+      poly_ring_mod=None,
+      coeff_field_order=None,
+      *args,
+      **kwargs):
+    """
+    Sparse (hash table) representation of a polynomial.
+    """
+    self.coeffs_ = coeffs # (!) No zero terms
+    self.coeff_field_order_ = coeff_field_order
+    self.poly_ring_mod_ = poly_ring_mod
 
-  Returns:
-    [0] * n + [1] The monomial of degree n.
-  """
-  return [0] * n + [1]
+  def __str__(self):
+    return poly_string(self.coeffs_)
+
+  def __add__(self, other):
+    return PolySparse(
+        poly_sparse_add(
+            self.coeffs_,
+            other.coeffs_,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __sub__(self, other):
+    return PolySparse(
+        poly_sparse_subtract(
+            self.coeffs_,
+            other.coeffs_,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __mul__(self, other):
+    prm_coeffs = None
+    if self.poly_ring_mod_ != None:
+      prm_coeffs = self.poly_ring_mod_.coeffs_
+
+    return PolySparse(
+        poly_sparse_multiply(
+            self.coeffs_,
+            other.coeffs_,
+            poly_ring_mod=prm_coeffs,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=prm_coeffs,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __pow__(self, n):
+    prm_coeffs = None
+    if self.poly_ring_mod_ != None:
+      prm_coeffs = self.poly_ring_mod_.coeffs_
+
+    return PolySparse(
+        poly_sparse_fast_pow(
+            self.coeffs_,
+            n,
+            poly_ring_mod=prm_coeffs,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __floordiv__(self, other):
+    q, r = self.__divmod__(other)
+    return q
+
+  def __mod__(self, other):
+    q, r = self.__divmod__(other)
+    return r
+
+  def __divmod__(self, other):
+    q, r = poly_sparse_quotient_remainder(
+        self.coeffs_,
+        other.coeffs_,
+        coeff_field_order=self.coeff_field_order_)
+    q = PolySparse(
+        q,
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+    r = PolySparse(
+        r,
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+    return q, r
+
