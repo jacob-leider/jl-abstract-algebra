@@ -1,24 +1,7 @@
-
-
-def clear_leading_zeros(a: list[int]) -> list[int]:
-  """
-  Clears leading zeros from a list.
-
-  Args:
-    a (list[int]): The list to clear.
-
-  Returns:
-    a (list[int]) The list without leading zeros.
-  """
-  while len(a) > 0:
-    if a[-1] == 0:
-      a = a[:-1]
-    else:
-      break
-  return a
-
-
-def poly_add(a: list[int], b: list[int], coeff_field_order: int) -> list[int]:
+def poly_dense_add(
+    a: list[int],
+    b: list[int],
+    coeff_field_order: int) -> list[int]:
   """
   Adds two polynomials.
 
@@ -48,7 +31,10 @@ def poly_add(a: list[int], b: list[int], coeff_field_order: int) -> list[int]:
   return c
 
 
-def poly_subtract(a: list[int], b: list[int], coeff_field_order) -> list[int]:
+def poly_dense_subtract(
+    a: list[int],
+    b: list[int],
+    coeff_field_order: int) -> list[int]:
   """
   Subtracts two polynomials.
 
@@ -61,10 +47,14 @@ def poly_subtract(a: list[int], b: list[int], coeff_field_order) -> list[int]:
   Returns:
     c (list[int]) The difference `a` - `b` of the two polynomials.
   """
-  return poly_add(a, poly_scale(-1, b, coeff_field_order), coeff_field_order)
+  neg_b = poly_dense_scale(-1, b, coeff_field_order)
+  return poly_dense_add(a, neg_b, coeff_field_order)
 
 
-def poly_scale(s: int, a: list[int], coeff_field_order) -> list[int]:
+def poly_dense_scale(
+    s: int,
+    a: list[int],
+    coeff_field_order: int) -> list[int]:
   """
   Scales a polynomial.
 
@@ -86,7 +76,7 @@ def poly_scale(s: int, a: list[int], coeff_field_order) -> list[int]:
   return scaled_a
 
 
-def degree_n_monomial(n):
+def degree_n_dense_monomial(n: int):
   """
   Returns the coefficient list of a monic monomial of degree n.
 
@@ -99,7 +89,10 @@ def degree_n_monomial(n):
   return [0] * n + [1]
 
 
-def poly_quotient_remainder(a: list[int], b: list[int], coeff_field_order) -> list[int]:
+def poly_dense_quotient_remainder(
+    a: list[int],
+    b: list[int],
+    coeff_field_order: int) -> list[int]:
   """
   Reduces a polynomial a(x) to the lowest degree polynomial b(x) such that
   a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
@@ -129,7 +122,7 @@ def poly_quotient_remainder(a: list[int], b: list[int], coeff_field_order) -> li
     raise ValueError("`b` has a leading zero coefficient")
 
   b_leading_coeff_inv = pow(b[-1], -1, coeff_field_order)
-  monic_b = poly_scale(b_leading_coeff_inv, b, coeff_field_order)
+  monic_b = poly_dense_scale(b_leading_coeff_inv, b, coeff_field_order)
 
   for i in range(N - 1, n - 2, -1):
     if i >= len(r):
@@ -139,14 +132,14 @@ def poly_quotient_remainder(a: list[int], b: list[int], coeff_field_order) -> li
       r_leading_coeff = r[i]
       q.append((r_leading_coeff * b_leading_coeff_inv) % coeff_field_order)
       # Subtract off the leading term from the remainder.
-      to_subtract = poly_scale(r_leading_coeff,
+      to_subtract = poly_dense_scale(r_leading_coeff,
                                monic_b,
                                coeff_field_order)
-      to_subtract = poly_multiply(degree_n_monomial(len(r) - n),
+      to_subtract = poly_dense_multiply(degree_n_dense_monomial(len(r) - n),
                                   to_subtract,
                                   None,
                                   coeff_field_order)
-      r = poly_subtract(r, to_subtract, coeff_field_order)
+      r = poly_dense_subtract(r, to_subtract, coeff_field_order)
 
   # Quotient terms currently in order of degree, decreasing.
   q.reverse()
@@ -154,7 +147,11 @@ def poly_quotient_remainder(a: list[int], b: list[int], coeff_field_order) -> li
   return q, r
 
 
-def poly_multiply(a: list[int], b: list[int], poly_ring_mod, coeff_field_order) -> list[int]:
+def poly_dense_multiply(
+    a: list[int],
+    b: list[int],
+    poly_ring_mod: list[int],
+    coeff_field_order: int) -> list[int]:
   """
   Multiplies two polynomials.
 
@@ -180,12 +177,17 @@ def poly_multiply(a: list[int], b: list[int], poly_ring_mod, coeff_field_order) 
 
   # Reduce.
   if poly_ring_mod != None:
-    _, c = poly_quotient_remainder(c, poly_ring_mod, coeff_field_order)
+    _, c = poly_dense_quotient_remainder(c, poly_ring_mod, coeff_field_order)
 
   return c
 
 
-def poly_fast_pow(a: list[int], n: int, poly_ring_mod, coeff_field_order, mod_is_irreducible=False) -> list[int]:
+def poly_dense_fast_pow(
+    a: list[int],
+    n: int,
+    poly_ring_mod: list[int],
+    coeff_field_order: int,
+    mod_is_irreducible: bool=False) -> list[int]:
   """
   Raises a polynomial to a power.
 
@@ -217,10 +219,98 @@ def poly_fast_pow(a: list[int], n: int, poly_ring_mod, coeff_field_order, mod_is
   # Algorithm.
   while n > 0:
     if n % 2 == 1:
-      res = poly_multiply(res, factor, poly_ring_mod, coeff_field_order)
+      res = poly_dense_multiply(res, factor, poly_ring_mod, coeff_field_order)
       n = n - 1 # For mathematical clarity.
 
-    factor = poly_multiply(factor, factor, poly_ring_mod, coeff_field_order)
+    factor = poly_dense_multiply(factor, factor, poly_ring_mod, coeff_field_order)
     n = n / 2
 
   return res
+
+
+class PolyDense:
+  def __init__(
+      self,
+      coeffs: list[int],
+      poly_ring_mod=None,
+      coeff_field_order=None,
+      *args,
+      **kwargs):
+    """
+    Dense (list) representation of a polynomial.
+    """
+    self.coeffs_ = clear_leading_zeros(coeffs)
+    self.coeff_field_order_ = coeff_field_order
+    self.poly_ring_mod_ = poly_ring_mod
+
+  def __str__(self):
+    return poly_string(self.coeffs_)
+
+  def __add__(self, other):
+    return PolyDense(
+        poly_dense_add(
+            self.coeffs_,
+            other.coeffs_,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __sub__(self, other):
+    return PolyDense(
+        poly_dense_subtract(
+            self.coeffs_,
+            other.coeffs_,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __mul__(self, other):
+    prm_coeffs = None
+    if self.poly_ring_mod_ != None:
+      prm_coeffs = self.poly_ring_mod_.coeffs_
+
+    return PolyDense(
+        poly_dense_multiply(
+            self.coeffs_,
+            other.coeffs_,
+            poly_ring_mod=prm_coeffs,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __pow__(self, n):
+    prm_coeffs = None
+    if self.poly_ring_mod_ != None:
+      prm_coeffs = self.poly_ring_mod_.coeffs_
+
+    return PolyDense(
+        poly_dense_fast_pow(
+            self.coeffs_,
+            n,
+            poly_ring_mod=prm_coeffs,
+            coeff_field_order=self.coeff_field_order_),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+
+  def __floordiv__(self, other):
+    q, r = self.__divmod__(other)
+    return q
+
+  def __mod__(self, other):
+    q, r = self.__divmod__(other)
+    return r
+
+  def __divmod__(self, other):
+    q, r = poly_dense_quotient_remainder(
+        self.coeffs_,
+        other.coeffs_,
+        coeff_field_order=self.coeff_field_order_)
+    q = PolyDense(
+        q,
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+    r = PolyDense(
+        r,
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
+    return q, r
