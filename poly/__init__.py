@@ -135,63 +135,56 @@ def poly_parse_string(poly_str: str, var: str) -> list[int]:
 class Poly:
   def __init__(
       self,
-      coeffs: list[int],
-      poly_ring_mod=None,
-      coeff_field_order=None,
+      coeffs: (list[int]|dict[int, int]),
+      poly_ring_mod: (list[int]|dict[int, int])=None,
+      coeff_field_order: int=None,
       *args,
       **kwargs):
-    self.coeffs_ = clear_leading_zeros(coeffs)
-    self.coeff_field_order_ = coeff_field_order
-    self.poly_ring_mod_ = poly_ring_mod
+    self.is_sparse_ = False
+    self.poly_sparse_ = None
+    self.poly_dense_ = None
+
+    if coeffs.__class__ == dict[int, int]:
+      self.is_sparse_ = True
+      self.poly_sparse_ = PolySparse(
+          coeffs,
+          poly_ring_mod=poly_ring_mod,
+          coeff_field_order=coeff_field_order)
+    elif coeffs.__class__ == list[int]:
+      self.is_sparse_ = False
+      self.poly_dense_ = PolyDense(
+          coeffs,
+          poly_ring_mod=poly_ring_mod,
+          coeff_field_order=coeff_field_order)
+    else:
+      raise ValueError("coeffs must be a list or dictionary")
 
   def __str__(self):
     return poly_string(self.coeffs_)
 
   def __add__(self, other):
-    return Poly(
-        poly_add(
-            self.coeffs_,
-            other.coeffs_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+    if self.is_sparse_:
+      return self.poly_sparse_ + other
+    else:
+      return self.poly_dense_ + other
 
   def __sub__(self, other):
-    return Poly(
-        poly_subtract(
-            self.coeffs_,
-            other.coeffs_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+    if self.is_sparse_:
+      return self.poly_sparse_ - other
+    else:
+      return self.poly_dense_ - other
 
   def __mul__(self, other):
-    prm_coeffs = None
-    if self.poly_ring_mod_ != None:
-      prm_coeffs = self.poly_ring_mod_.coeffs_
-
-    return Poly(
-        poly_multiply(
-            self.coeffs_,
-            other.coeffs_,
-            poly_ring_mod=prm_coeffs,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+    if self.is_sparse_:
+      return self.poly_sparse_ * other
+    else:
+      return self.poly_dense_ * other
 
   def __pow__(self, n):
-    prm_coeffs = None
-    if self.poly_ring_mod_ != None:
-      prm_coeffs = self.poly_ring_mod_.coeffs_
-
-    return Poly(
-        poly_fast_pow(
-            self.coeffs_,
-            n,
-            poly_ring_mod=prm_coeffs,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+    if self.is_sparse_:
+      return self.poly_sparse_ ** n
+    else:
+      return self.poly_dense_ ** n
 
   def __floordiv__(self, other):
     q, r = self.__divmod__(other)
@@ -202,22 +195,11 @@ class Poly:
     return r
 
   def __divmod__(self, other):
-    q, r = poly_quotient_remainder(
-        self.coeffs_,
-        other.coeffs_,
-        coeff_field_order=self.coeff_field_order_)
-    q = Poly(
-        q,
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
-    r = Poly(
-        r,
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+    if self.is_sparse_:
+      q, r = self.poly_sparse_.__divmod__(other)
+    else:
+      q, r = self.poly_dense_.__divmod__(other)
     return q, r
 
-  def sparsity(self):
-    """
-    Returns the sparsity of the polynomial's list representation.
-    """
-    return self.coeffs_.count(0) / len(self.coeffs_)
+  def is_sparse(self):
+    return self.is_sparse_
