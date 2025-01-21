@@ -1,6 +1,8 @@
 
-
-def poly_sparse_scale(s: int, a: dict[int, int], coeff_field_order) -> dict[int, int]:
+def poly_sparse_scale(
+    s: int,
+    a: dict[int, int],
+    coeff_field_order: int) -> dict[int, int]:
   """
   Scales a sparse polynomial.
 
@@ -22,7 +24,10 @@ def poly_sparse_scale(s: int, a: dict[int, int], coeff_field_order) -> dict[int,
   return scaled_a
 
 
-def poly_sparse_add(a: dict[int, int], b: dict[int, int], coeff_field_order: int) -> dict[int, int]:
+def poly_sparse_add(
+    a: dict[int, int],
+    b: dict[int, int],
+    coeff_field_order: int) -> dict[int, int]:
   """
   Adds two sparse polynomials.
 
@@ -35,7 +40,7 @@ def poly_sparse_add(a: dict[int, int], b: dict[int, int], coeff_field_order: int
     c (dict[int, int]) The sum of the two sparse polynomials.
   """
   c = a.copy()
-  
+
   for deg, coeff in b.items():
     if deg in c:
       c[deg] += coeff
@@ -43,14 +48,17 @@ def poly_sparse_add(a: dict[int, int], b: dict[int, int], coeff_field_order: int
       c[deg] = coeff
     if coeff_field_order != None:
       c[deg] %= coeff_field_order
-    
+
     if c[deg] == 0:
       del c[deg]
 
   return c
 
 
-def poly_sparse_subtract(a: dict[int, int], b: dict[int, int], coeff_field_order: int) -> dict[int, int]:
+def poly_sparse_subtract(
+    a: dict[int, int],
+    b: dict[int, int],
+    coeff_field_order: int) -> dict[int, int]:
   """
   Subtracts two sparse polynomials.
 
@@ -62,10 +70,15 @@ def poly_sparse_subtract(a: dict[int, int], b: dict[int, int], coeff_field_order
   Returns:
     c (dict[int, int]) The sum a - b.
   """
-  return poly_sparse_add(a, poly_sparse_scale(-1, b, coeff_field_order), coeff_field_order)
+  neg_b = poly_sparse_scale(-1, b, coeff_field_order)
+  return poly_sparse_add(a, neg_b, coeff_field_order)
 
 
-def poly_sparse_multiply(a: dict[int, int], b: dict[int, int], poly_ring_mod, coeff_field_order) -> dict[int, int]:
+def poly_sparse_multiply(
+    a: dict[int, int],
+    b: dict[int, int],
+    poly_ring_mod: dict[int, int],
+    coeff_field_order: int) -> dict[int, int]:
   c = {}
 
   for a_deg, a_coeff in a.items():
@@ -77,19 +90,36 @@ def poly_sparse_multiply(a: dict[int, int], b: dict[int, int], poly_ring_mod, co
 
       if coeff_field_order != None:
         c[a_deg + b_deg] %= coeff_field_order
-      
+
       if c[a_deg + b_deg] == 0:
         del c[a_deg + b_deg]
-  
+
   if poly_ring_mod != None:
-    pass
+    _, c = poly_sparse_quotient_remainder(c, poly_ring_mod, coeff_field_order)
 
   return c
 
 
-def poly_sparse_quotient_remainder(a: dict[int, int], b: dict[int, int], coeff_field_order: int) -> dict[int, int]:
+def degree_n_sparse_monomial(n: int):
   """
-  Reduces a (sparse) polynomial a(x) to the lowest degree (sparse) polynomial 
+  Returns the coefficient list of a monic monomial of degree n.
+
+  Args:
+    n (int): The degree of the monomial.
+
+  Returns:
+    [0] * n + [1] The monomial of degree n.
+  """
+  m = {}
+  m[n] = 1
+  return m
+
+def poly_sparse_quotient_remainder(
+    a: dict[int, int],
+    b: dict[int, int],
+    coeff_field_order: int) -> dict[int, int]:
+  """
+  Reduces a (sparse) polynomial a(x) to the lowest degree (sparse) polynomial
   b(x) such that a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
 
   Args:
@@ -106,20 +136,23 @@ def poly_sparse_quotient_remainder(a: dict[int, int], b: dict[int, int], coeff_f
 
   q_map = {}
   r_map = a.copy()
-  
+
   deg_g = b_nz[0]
   leading_g_coeff_inv = pow(b[deg_g], -1, coeff_field_order)
-  monic_b_map = poly_sparse_scale(leading_g_coeff_inv, b.copy(), coeff_field_order)
+  monic_b_map = poly_sparse_scale(
+      leading_g_coeff_inv,
+      b.copy(),
+      coeff_field_order)
 
   ct = 10
   for deg_r in r_nz:
     if deg_r < deg_g:
       break
-    
+
     ct -= 1
     if ct == 0:
       break
-    
+
     if deg_r not in r_map:
       # Term vanished in a prior round.
       continue
@@ -127,13 +160,13 @@ def poly_sparse_quotient_remainder(a: dict[int, int], b: dict[int, int], coeff_f
     # Subtract off a term.
     leading_r_coeff = r_map[deg_r]
     to_subtract = poly_sparse_multiply(
-        degree_n_sparse_monomial(deg_r - deg_g), 
-        monic_b_map, 
-        None, 
+        degree_n_sparse_monomial(deg_r - deg_g),
+        monic_b_map,
+        None,
         coeff_field_order)
     to_subtract = poly_sparse_scale(
-        leading_r_coeff, 
-        to_subtract, 
+        leading_r_coeff,
+        to_subtract,
         coeff_field_order)
     r_map = poly_sparse_subtract(r_map, to_subtract, coeff_field_order)
 
@@ -144,7 +177,7 @@ def poly_sparse_quotient_remainder(a: dict[int, int], b: dict[int, int], coeff_f
       q_map[deg_r - deg_g] = leading_r_coeff
     if coeff_field_order != None:
       q_map[deg_r - deg_g] %= coeff_field_order
-  
+
   # Ensure proper form.
   for deg, coeff in r_map.copy().items():
     if coeff == 0:
@@ -156,19 +189,59 @@ def poly_sparse_quotient_remainder(a: dict[int, int], b: dict[int, int], coeff_f
   return q_map, r_map
 
 
-def degree_n_sparse_monomial(n):
+def poly_sparse_fast_pow(
+    a: dict[int, int],
+    n: int, poly_ring_mod: list[int],
+    coeff_field_order: int,
+    mod_is_irreducible: bool=False) -> list[int]:
   """
-  Returns the coefficient list of a monic monomial of degree n.
+  Raises a polynomial to a power.
 
   Args:
-    n (int): The degree of the monomial.
+    poly_ring_mod (list[int]): Mod for the polynomial ring.
+    coeff_field_order (int): mod for coefficient field.
+    a (list[int]): The polynomial to raise to a power.x
+    n (int): The power to raise the polynomial to.
 
   Returns:
-    [0] * n + [1] The monomial of degree n.
+    a (list[int]) The polynomial raised to the power.
   """
-  m = {}
-  m[n] = 1
-  return m
+  res = {0: 1}
+  factor = a.copy()
+
+  poly_ring_mod_deg = max(poly_ring_mod.keys())
+  poly_field_order = pow(coeff_field_order, poly_ring_mod_deg)
+
+  # Error handling.
+  if n < 0:
+    if poly_ring_mod == None:
+      raise ValueError("Cannot invert an element whose domain isn't a field (poly_ring_mod == None)")
+    else:
+      n = n % poly_field_order
+
+  if mod_is_irreducible:
+    if poly_ring_mod == None:
+      raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
+    n %= poly_field_order
+
+  # Algorithm.
+  while n > 0:
+    if n % 2 == 1:
+      res = poly_sparse_multiply(
+          res,
+          factor,
+          poly_ring_mod,
+          coeff_field_order)
+      n = n - 1 # For mathematical clarity.
+
+    factor = poly_sparse_multiply(
+        factor,
+        factor,
+        poly_ring_mod,
+        coeff_field_order)
+    n = n / 2
+
+  return res
 
 
 class PolySparse:
