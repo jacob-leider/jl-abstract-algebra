@@ -1,6 +1,12 @@
-from sparse import *
-from dense import *
+"""Polynomial Interface
 
+Provides access to dense and sparse polynomial representations through a single 
+`Poly` class.
+
+"""
+
+from . import sparse
+from . import dense
 
 def poly_sparse_to_dense(sparse: dict[int, int]) -> list[int]:
   """
@@ -38,7 +44,7 @@ def poly_dense_to_sparse(dense: list[int]) -> dict[int, int]:
   return sparse
 
 
-def poly_string(poly: (list[int]|dict[int, int]), space_after_coeff=False) -> str:
+def poly_string(poly: list[int] | dict[int, int], space_after_coeff=False) -> str:
   """
   Returns a string representation of a polynomial.
 
@@ -135,9 +141,9 @@ def poly_parse_string(poly_str: str, var: str) -> list[int]:
 class Poly:
   def __init__(
       self,
-      coeffs: (list[int]|dict[int, int]),
-      poly_ring_mod: (list[int]|dict[int, int])=None,
-      coeff_field_order: int=None,
+      coeffs: list[int] | dict[int, int],
+      poly_ring_mod: list[int] | dict[int, int]=None,
+      coeff_field_order: int | None=None,
       *args,
       **kwargs):
     self.is_sparse_ = False
@@ -146,13 +152,13 @@ class Poly:
 
     if coeffs.__class__ == dict[int, int]:
       self.is_sparse_ = True
-      self.poly_sparse_ = PolySparse(
+      self.poly_sparse_ = sparse.PolySparse(
           coeffs,
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
     elif coeffs.__class__ == list[int]:
       self.is_sparse_ = False
-      self.poly_dense_ = PolyDense(
+      self.poly_dense_ = dense.PolyDense(
           coeffs,
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
