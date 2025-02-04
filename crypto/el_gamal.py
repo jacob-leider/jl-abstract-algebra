@@ -2,12 +2,12 @@ import random
 import math
 import secrets
 
-class DiffieHellmanClient:
+class ElGamalClient:
   def __init__(self, **kwargs):
     """
-    Client class for executing the Diffie-Hellman key exchange. 
+    Client class for encrypted communication using the El Gamal crytposystem. 
     
-    Implements encryption and decryption in the Elgamal cryptosystem. Does not 
+    Implements encryption and decryption in the El Gamal cryptosystem. Does not 
     implement any protocols for network communication.
     """
     # Bytes per block.
