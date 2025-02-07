@@ -138,74 +138,123 @@ def poly_parse_string(poly_str: str, var: str) -> list[int]:
   return poly_sparse_to_dense(coeffs_map)
 
 
+def generalized_fast_pow(a, n: int, func: callable, *args, **kwargs):
+  res = a.__deepcopy__() # Start out with first power since we don't know a^0
+  n -= 1
+
+  while n > 0:
+    if n % 2 == 1:
+      res = func(res, a, *args, **kwargs)
+      n = n - 1 # For mathematical clarity.
+
+    a = func(a, a, *args, **kwargs)
+    n = n / 2
+
+  return res
+
 class Poly:
   def __init__(
       self,
-      coeffs: list[int] | dict[int, int],
-      poly_ring_mod: list[int] | dict[int, int]=None,
+      coeffs: list[int] | dict[int, int] | str | PolyDense | PolySparse,
+      poly_ring_mod = None,
       coeff_field_order: int | None=None,
       *args,
       **kwargs):
+    """
+    A representation of an element of (possible the quotient of) a polynomial ring where 
+    implementation details (e.g. sparse vs. dense) are abstracted away.s
+    """
     self.is_sparse_ = False
     self.poly_sparse_ = None
     self.poly_dense_ = None
-
-    if coeffs.__class__ == dict[int, int]:
+    # Check coeffs    
+    if coeffs.__class__ == PolyDense:
+      self.is_sparse_ = False
+      self.poly_dense_ = coeffs
+      self.poly_sparse_ = None
+    elif coeffs.__class__ == PolySparse:
       self.is_sparse_ = True
-      self.poly_sparse_ = sparse.PolySparse(
+      self.poly_sparse_ = coeffs
+      self.poly_dense_ = None
+    elif coeffs.__class__ == dict:
+      self.is_sparse_ = True
+      self.poly_sparse_ = PolySparse(
           coeffs,
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
-    elif coeffs.__class__ == list[int]:
+    elif coeffs.__class__ == list:
       self.is_sparse_ = False
-      self.poly_dense_ = dense.PolyDense(
+      self.poly_dense_ = PolyDense(
           coeffs,
+          poly_ring_mod=poly_ring_mod,
+          coeff_field_order=coeff_field_order)
+    elif coeffs.__class__ == str:
+      # For now return a dense representation.
+      try:
+        coeffs_dense = poly_parse_string(coeffs)
+      except SyntaxError:
+        raise SyntaxError("Invalid polynomial string")
+      self.is_sparse_ = False
+      self.poly_dense_ = PolyDense(
+          coeffs_dense,
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
     else:
-      raise ValueError("coeffs must be a list or dictionary")
+      raise ValueError("coeffs must be a list, dictionary, or string")
+    
 
   def __str__(self):
-    return poly_string(self.coeffs_)
+    
+    if self.is_sparse():
+      return self.poly_sparse_.__str__()
+    else:
+      return self.poly_dense_.__str__()
 
   def __add__(self, other):
     if self.is_sparse_:
-      return self.poly_sparse_ + other
+      return Poly(self.poly_sparse_ + other.poly_sparse_)
     else:
-      return self.poly_dense_ + other
+      return Poly(self.poly_dense_ + other.poly_dense_)
 
   def __sub__(self, other):
     if self.is_sparse_:
-      return self.poly_sparse_ - other
+      return Poly(self.poly_sparse_ - other.poly_sparse_)
     else:
-      return self.poly_dense_ - other
+      return Poly(self.poly_dense_ - other.poly_dense_)
 
   def __mul__(self, other):
     if self.is_sparse_:
-      return self.poly_sparse_ * other
+      return Poly(self.poly_sparse_ * other.poly_sparse_)
     else:
-      return self.poly_dense_ * other
+      return Poly(self.poly_dense_ * other.poly_dense_)
 
   def __pow__(self, n):
-    if self.is_sparse_:
-      return self.poly_sparse_ ** n
-    else:
-      return self.poly_dense_ ** n
+    return generalized_fast_pow(self, n, Poly.__mul__)
 
   def __floordiv__(self, other):
     q, r = self.__divmod__(other)
-    return q
+    return Poly(q)
 
   def __mod__(self, other):
     q, r = self.__divmod__(other)
-    return r
+    return Poly(r)
 
   def __divmod__(self, other):
     if self.is_sparse_:
-      q, r = self.poly_sparse_.__divmod__(other)
+      q, r = self.poly_sparse_.__divmod__(other.poly_sparse_)
     else:
-      q, r = self.poly_dense_.__divmod__(other)
-    return q, r
+      q, r = self.poly_dense_.__divmod__(other.poly_dense_)
+    return Poly(q), Poly(r)
+
+  def __deepcopy__(self):
+    if self.is_sparse_:
+      return Poly(self.poly_sparse_.coeffs_,
+                  self.poly_sparse_.poly_ring_mod_,
+                  self.poly_sparse_.coeff_field_order_)
+    else:
+      return Poly(self.poly_dense_.coeffs_,
+                  self.poly_dense_.poly_ring_mod_,
+                  self.poly_dense_.coeff_field_order_)
 
   def is_sparse(self):
     return self.is_sparse_
