@@ -253,11 +253,39 @@ class PolySparse:
       *args,
       **kwargs):
     """
-    Sparse (hash table) representation of a polynomial.
+    Sparse representation of an element of a polynomial ring.
+
+    Args:
+      coeffs (list[int] | dict[int, int]): The coefficients of the polynomial.
+      poly_ring_mod (list[int] | dict[int,int]): Mod for the polynomial ring.
+      coeff_field_order (int): mod for coefficient field.
     """
-    self.coeffs_ = coeffs # (!) No zero terms
-    self.coeff_field_order_ = coeff_field_order
-    self.poly_ring_mod_ = poly_ring_mod
+    # check coeffs
+    if coeffs == None:
+      self.coeffs_ = {}
+    elif coeffs.__class__ == dict:
+      self.coeffs_ = coeffs
+    elif coeffs.__class__ == list:
+      self.coeffs_ = poly_dense_to_sparse(coeffs)
+    else:
+      raise ValueError("coeffs must be a list or dictionary")
+    # check poly_ring_mod
+    if poly_ring_mod != None:
+      if poly_ring_mod.__class__ == list:
+        self.poly_ring_mod_ = poly_dense_to_sparse(poly_ring_mod)
+      elif poly_ring_mod.__class__ == dict:
+        self.poly_ring_mod_ = poly_ring_mod
+      else:
+        raise ValueError("poly_ring_mod must be a list or dictionary")
+    else:
+      self.poly_ring_mod_ = None
+    # check coeff_field_order
+    if coeff_field_order == None:
+      self.coeff_field_order_ = None
+    elif coeff_field_order.__class__ == int:
+      self.coeff_field_order_ = coeff_field_order
+    else:
+      raise ValueError("coeff_field_order must be an integer")
 
   def __str__(self):
     return poly_string(self.coeffs_)
@@ -281,29 +309,21 @@ class PolySparse:
         coeff_field_order=self.coeff_field_order_)
 
   def __mul__(self, other):
-    prm_coeffs = None
-    if self.poly_ring_mod_ != None:
-      prm_coeffs = self.poly_ring_mod_.coeffs_
-
     return PolySparse(
         poly_sparse_multiply(
             self.coeffs_,
             other.coeffs_,
-            poly_ring_mod=prm_coeffs,
+            poly_ring_mod=self.poly_ring_mod_,
             coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=prm_coeffs,
+        poly_ring_mod=self.poly_ring_mod_,
         coeff_field_order=self.coeff_field_order_)
 
   def __pow__(self, n):
-    prm_coeffs = None
-    if self.poly_ring_mod_ != None:
-      prm_coeffs = self.poly_ring_mod_.coeffs_
-
     return PolySparse(
         poly_sparse_fast_pow(
             self.coeffs_,
             n,
-            poly_ring_mod=prm_coeffs,
+            poly_ring_mod=self.poly_ring_mod_,
             coeff_field_order=self.coeff_field_order_),
         poly_ring_mod=self.poly_ring_mod_,
         coeff_field_order=self.coeff_field_order_)
@@ -331,3 +351,8 @@ class PolySparse:
         coeff_field_order=self.coeff_field_order_)
     return q, r
 
+  def __copy__(self):
+    return PolySparse(
+        self.coeffs_.copy(),
+        poly_ring_mod=self.poly_ring_mod_,
+        coeff_field_order=self.coeff_field_order_)
