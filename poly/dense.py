@@ -236,76 +236,73 @@ class PolyDense:
       coeff_field_order=None,
       *args,
       **kwargs):
-    """
-    Dense representation of an element of (possibly a quotient of) a polynomial ring.
-    """
     # check coeffs
     if coeffs == None:
-      self.coeffs_ = []
+      self._coeffs = []
     elif coeffs.__class__ == dict:
-      self.coeffs_ = poly_sparse_to_dense(coeffs)
+      self._coeffs = poly_sparse_to_dense(coeffs)
     elif coeffs.__class__ == list:
-      self.coeffs_ = coeffs
+      self._coeffs = coeffs
     else:
-      raise ValueError("coeffs must be a list or dictionary")
+      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
     if poly_ring_mod != None:
       if poly_ring_mod.__class__ == dict:
-        self.poly_ring_mod_ = poly_sparse_to_dense(poly_ring_mod)
+        self._poly_ring_mod = poly_sparse_to_dense(poly_ring_mod)
       elif poly_ring_mod.__class__ == list:
-        self.poly_ring_mod_ = poly_ring_mod
+        self._poly_ring_mod = poly_ring_mod
       else:
-        raise ValueError("poly_ring_mod must be a list or dictionary")
+        raise ValueError(f"poly_ring_mod must be a list or dictionary. recieved an instance of {poly_ring_mod.__class__}")
     else:
-      self.poly_ring_mod_ = None
+      self._poly_ring_mod = None
     # check coeff_field_order
     if coeff_field_order == None:
-      self.coeff_field_order_ = None
+      self._coeff_field_order = None
     elif coeff_field_order.__class__ == int:
-      self.coeff_field_order_ = coeff_field_order
+      self._coeff_field_order = coeff_field_order
     else:
-      raise ValueError("coeff_field_order must be an integer")
+      raise ValueError(f"coeff_field_order must be a list or dictionary. recieved an instance of {coeff_field_order.__class__}")
 
   def __str__(self):
-    return poly_string(self.coeffs_)
+    return poly_string(self._coeffs)
 
   def __add__(self, other):
     return PolyDense(
         poly_dense_add(
-            self.coeffs_,
-            other.coeffs_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+            self._coeffs,
+            other._coeffs,
+            coeff_field_order=self._coeff_field_order),
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
 
   def __sub__(self, other):
     return PolyDense(
         poly_dense_subtract(
-            self.coeffs_,
-            other.coeffs_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+            self._coeffs,
+            other._coeffs,
+            coeff_field_order=self._coeff_field_order),
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
 
   def __mul__(self, other):
     return PolyDense(
         poly_dense_multiply(
-            self.coeffs_,
-            other.coeffs_,
-            poly_ring_mod=self.poly_ring_mod_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+            self._coeffs,
+            other._coeffs,
+            poly_ring_mod=self._poly_ring_mod,
+            coeff_field_order=self._coeff_field_order),
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
 
   def __pow__(self, n):
     return PolyDense(
         poly_dense_fast_pow(
-            self.coeffs_,
+            self._coeffs,
             n,
-            poly_ring_mod=self.poly_ring_mod_,
-            coeff_field_order=self.coeff_field_order_),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+            poly_ring_mod=self._poly_ring_mod,
+            coeff_field_order=self._coeff_field_order),
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
 
   def __floordiv__(self, other):
     q, r = self.__divmod__(other)
@@ -317,21 +314,25 @@ class PolyDense:
 
   def __divmod__(self, other):
     q, r = poly_dense_quotient_remainder(
-        self.coeffs_,
-        other.coeffs_,
-        coeff_field_order=self.coeff_field_order_)
+        self._coeffs,
+        other._coeffs,
+        coeff_field_order=self._coeff_field_order)
     q = PolyDense(
         q,
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
     r = PolyDense(
         r,
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
     return q, r
 
   def __copy__(self):
     return PolyDense(
-        self.coeffs_.copy(),
-        poly_ring_mod=self.poly_ring_mod_,
-        coeff_field_order=self.coeff_field_order_)
+        self._coeffs.copy(),
+        poly_ring_mod=self._poly_ring_mod,
+        coeff_field_order=self._coeff_field_order)
+
+  # Alias for container class
+  def _poly(self):
+    return self
