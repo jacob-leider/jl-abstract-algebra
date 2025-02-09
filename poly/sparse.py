@@ -267,6 +267,8 @@ class PolySparse:
       self._coeffs = coeffs
     elif coeffs.__class__ == list:
       self._coeffs = poly_dense_to_sparse(coeffs)
+    elif coeffs.__class__ == int:
+      self._coeffs = {0:coeffs}
     else:
       raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
