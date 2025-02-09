@@ -44,44 +44,87 @@ def poly_dense_to_sparse(dense: list[int]) -> dict[int, int]:
   return sparse
 
 
-def poly_string(poly: list[int] | dict[int, int], space_after_coeff=False) -> str:
+def poly_string(
+    poly: (list[int]|dict[int, int]),
+    space_after_coeff: bool=False,
+    order_increasing=True,
+    implicit_powers=True,
+    implicit_coeffs=True, **kwargs) -> str:
   """
   Returns a string representation of a polynomial.
 
   Args:
     poly (list[int]): The polynomial to print.
-  
+
   Returns:
     poly_str (str): The string representation of the polynomial.
   """
+  # Check param mode.
+  mode = "txt"
+  if mode in kwargs:
+    mode = kwargs["mode"]
+  # Convert polynomial to a list of (deg, coeff) pairs.
+  deg_coeff_list = None
   if poly.__class__ == dict:
-    mono_str_vec = []
-    for deg, coeff in sorted(poly.items(), reverse=True):
-      # Coefficients cannot be zero.
-      if space_after_coeff:
-        mono_str_vec.append(f"{coeff} x^{deg}")
-      else:
-        mono_str_vec.append(f"{coeff}x^{deg}")
-
-    poly_str = " + ".join(mono_str_vec)
-    poly_str = poly_str.replace("x^0", "")
-    poly_str = poly_str.replace("1x", "x")
+    deg_coeff_list = list(sorted(poly.items()))
+  elif poly.__class__ == list:
+    deg_coeff_list = list(enumerate(poly))
   else:
-    if len(poly) == 0:
-      return "0"
-
-    mono_str_vec = []
-    for i, c in enumerate(poly):
-      if c != 0:
-        if space_after_coeff:
-          mono_str_vec.append(f"{c} x^{i}")
+    raise ValueError(f"Invalid polynomial type: {poly.__class__}")
+  if not order_increasing:
+    deg_coeff_list.reverse()
+  # Build a list of monomial strings.
+  mono_str_vec = []
+  for deg, coeff in deg_coeff_list:
+    if coeff != 0:
+      # Coefficient.
+      if coeff == 1:
+        if implicit_coeffs & deg > 0: # if deg == 0, coeff must be explicit.
+          mono_str = ""
         else:
-          mono_str_vec.append(f"{c}x^{i}")
+          mono_str = "1"
+      elif coeff == -1:
+        if implicit_coeffs:
+          mono_str = "-"
+        else:
+          mono_str = "-1"
+      else:
+        mono_str = f"{coeff}"
+      # Space.
+      if space_after_coeff:
+        mono_str += " "
+      # Variable (x^).
+      if deg == 0:
+        if implicit_powers:
+          mono_str_vec.append(mono_str)
+          continue
+        else:
+          mono_str += "x^"
+      elif deg == 1:
+        if implicit_powers:
+          mono_str += "x"
+          mono_str_vec.append(mono_str)
+          continue
+        else:
+          mono_str += "x^"
+      else:
+        mono_str += "x^"
+      # Exponent.
+      if mode == "latex":
+        mono_str += "{" + str(deg) + "}"
+      else:
+        mono_str += str(deg)
+      # Done.
+      mono_str_vec.append(mono_str)
 
-    poly_str = " + ".join(reversed(mono_str_vec))
+  # Join and clean.
+  poly_str = " + ".join(mono_str_vec)
+  if implicit_powers:
     poly_str = poly_str.replace("x^0", "")
+    poly_str = poly_str.replace("x^1", "x")
+  if implicit_coeffs:
     poly_str = poly_str.replace("1x", "x")
-  
+
   return poly_str
 
 
