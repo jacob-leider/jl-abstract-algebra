@@ -268,7 +268,7 @@ class PolySparse:
     elif coeffs.__class__ == list:
       self._coeffs = poly_dense_to_sparse(coeffs)
     else:
-      raise ValueError("coeffs must be a list or dictionary")
+      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
     if poly_ring_mod != None:
       if poly_ring_mod.__class__ == list:
@@ -276,7 +276,7 @@ class PolySparse:
       elif poly_ring_mod.__class__ == dict:
         self._poly_ring_mod = poly_ring_mod
       else:
-        raise ValueError("poly_ring_mod must be a list or dictionary")
+        raise ValueError(f"poly_ring_mod must be a list or dictionary. recieved an instance of {poly_ring_mod.__class__}")
     else:
       self._poly_ring_mod = None
     # check coeff_field_order
@@ -285,7 +285,7 @@ class PolySparse:
     elif coeff_field_order.__class__ == int:
       self._coeff_field_order = coeff_field_order
     else:
-      raise ValueError("coeff_field_order must be an integer")
+      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
 
   def __str__(self):
     return poly_string(self._coeffs)
