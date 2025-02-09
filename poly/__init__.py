@@ -252,6 +252,12 @@ class Poly:
           coeffs_dense,
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
+    elif coeffs.__class__ == int:
+      self._is_sparse = False
+      self._poly_dense = PolyDense(
+          coeffs,
+          poly_ring_mod=poly_ring_mod,
+          coeff_field_order=coeff_field_order)
     else:
       raise ValueError("coeffs must be a list, dictionary, or string")
 
