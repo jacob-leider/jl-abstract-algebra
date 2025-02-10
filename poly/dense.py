@@ -1,7 +1,9 @@
+from poly.utils import *
+
 def poly_dense_add(
     a: list[int],
     b: list[int],
-    coeff_field_order: int) -> list[int]:
+    coeff_field_order: int | None) -> list[int]:
   """
   Adds two polynomials.
 
@@ -34,7 +36,7 @@ def poly_dense_add(
 def poly_dense_subtract(
     a: list[int],
     b: list[int],
-    coeff_field_order: int) -> list[int]:
+    coeff_field_order: int | None) -> list[int]:
   """
   Subtracts two polynomials.
 
@@ -54,7 +56,7 @@ def poly_dense_subtract(
 def poly_dense_scale(
     s: int,
     a: list[int],
-    coeff_field_order: int) -> list[int]:
+    coeff_field_order: int | None) -> list[int]:
   """
   Scales a polynomial.
 
@@ -92,7 +94,7 @@ def degree_n_dense_monomial(n: int):
 def poly_dense_quotient_remainder(
     a: list[int],
     b: list[int],
-    coeff_field_order: int) -> list[int]:
+    coeff_field_order: int | None) -> tuple[list[int], list[int]]:
   """
   Reduces a polynomial a(x) to the lowest degree polynomial b(x) such that
   a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
@@ -150,8 +152,8 @@ def poly_dense_quotient_remainder(
 def poly_dense_multiply(
     a: list[int],
     b: list[int],
-    poly_ring_mod: list[int],
-    coeff_field_order: int) -> list[int]:
+    poly_ring_mod: list[int] | None,
+    coeff_field_order: int | None) -> list[int]:
   """
   Multiplies two polynomials.
 
@@ -185,8 +187,8 @@ def poly_dense_multiply(
 def poly_dense_fast_pow(
     a: list[int],
     n: int,
-    poly_ring_mod: list[int],
-    coeff_field_order: int,
+    poly_ring_mod: list[int] | None,
+    coeff_field_order: int | None,
     mod_is_irreducible: bool=False) -> list[int]:
   """
   Raises a polynomial to a power.
@@ -204,17 +206,17 @@ def poly_dense_fast_pow(
   factor = a.copy()
 
   # Error handling.
-  if n < 0:
-    if poly_ring_mod == None:
+  if poly_ring_mod == None:
+    if n < 0:
       raise ValueError("Cannot invert an element whose domain isn't a field (poly_ring_mod == None)")
-    else:
+  if mod_is_irreducible:
+      raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
+  else:
+    if n < 0:
       poly_field_order = pow(coeff_field_order, len(poly_ring_mod) + 1)
       n = n % poly_field_order
-
-  if mod_is_irreducible:
-    if poly_ring_mod == None:
-      raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
-    n %= coeff_field_order ** (len(poly_ring_mod) - 1)
+    if mod_is_irreducible:
+      n %= coeff_field_order ** (len(poly_ring_mod) - 1)
 
   # Algorithm.
   while n > 0:
@@ -223,7 +225,7 @@ def poly_dense_fast_pow(
       n = n - 1 # For mathematical clarity.
 
     factor = poly_dense_multiply(factor, factor, poly_ring_mod, coeff_field_order)
-    n = n / 2
+    n = n // 2
 
   return res
 
@@ -231,27 +233,23 @@ def poly_dense_fast_pow(
 class PolyDense:
   def __init__(
       self,
-      coeffs: list[int],
-      poly_ring_mod=None,
-      coeff_field_order=None,
+      coeffs: list[int] | int,
+      poly_ring_mod: list[int] | None=None,
+      coeff_field_order: int | None=None,
       *args,
       **kwargs):
     # check coeffs
     if coeffs == None:
       self._coeffs = []
-    elif coeffs.__class__ == dict:
-      self._coeffs = poly_sparse_to_dense(coeffs)
-    elif coeffs.__class__ == list:
+    elif isinstance(coeffs, list):
       self._coeffs = coeffs
-    elif coeffs.__class__ == int:
+    elif isinstance(coeffs, int):
       self._coeffs = [coeffs]
     else:
       raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
     if poly_ring_mod != None:
-      if poly_ring_mod.__class__ == dict:
-        self._poly_ring_mod = poly_sparse_to_dense(poly_ring_mod)
-      elif poly_ring_mod.__class__ == list:
+      if poly_ring_mod.__class__ == list:
         self._poly_ring_mod = poly_ring_mod
       else:
         raise ValueError(f"poly_ring_mod must be a list or dictionary. recieved an instance of {poly_ring_mod.__class__}")
@@ -307,11 +305,11 @@ class PolyDense:
         coeff_field_order=self._coeff_field_order)
 
   def __floordiv__(self, other):
-    q, r = self.__divmod__(other)
+    q, _ = self.__divmod__(other)
     return q
 
   def __mod__(self, other):
-    q, r = self.__divmod__(other)
+    _, r = self.__divmod__(other)
     return r
 
   def __divmod__(self, other):
