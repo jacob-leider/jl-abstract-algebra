@@ -124,14 +124,7 @@ def poly_string(
       # Done.
       mono_str_vec.append(mono_str)
 
-  # Join and clean.
   poly_str = " + ".join(mono_str_vec)
-  if implicit_powers:
-    poly_str = poly_str.replace("x^0", "")
-    poly_str = poly_str.replace("x^1", "x")
-  if implicit_coeffs:
-    poly_str = poly_str.replace("1x", "x")
-
   return poly_str
 
 
