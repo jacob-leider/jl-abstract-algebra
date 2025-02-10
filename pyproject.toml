@@ -9,11 +9,11 @@ dependencies = [
 ]
 requires-python = ">=3.8"
 authors = [
-  {name = "Jacob Leider", email = ""}
+  {name = "Jacob Leider", email = "jhl141@case.edu"}
 ]
 
 maintainers = [
-  {name = "Jacob Leider", email = ""}
+  {name = "Jacob Leider", email = "jhl141@case.edu"}
 ]
 
 readme = "README.md"
