@@ -13,9 +13,6 @@ from .sparse import *
 from .dense import *
 from .utils import *
 
-
-
-
 class Poly:
   def __init__(
       self,
