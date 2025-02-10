@@ -108,6 +108,10 @@ def poly_dense_quotient_remainder(
     q (list[int]) The quotient.
     r (list[int]) The remainder.
   """
+
+  if not isinstance(coeff_field_order, int):
+    raise ValueError("Currently only supports prime fields (coeff_field_order) must be an int")
+
   r = a.copy()
   q = []
   n = len(b)
@@ -206,17 +210,23 @@ def poly_dense_fast_pow(
   factor = a.copy()
 
   # Error handling.
-  if poly_ring_mod == None:
+  if isinstance(poly_ring_mod, list):
+    if n < 0:
+      if coeff_field_order != None:
+        if mod_is_irreducible:
+          poly_field_order = pow(coeff_field_order, len(poly_ring_mod) + 1)
+          n = n % poly_field_order
+    else:
+      if coeff_field_order != None:
+        poly_field_order = pow(coeff_field_order, len(poly_ring_mod) + 1)
+        n = n % poly_field_order
+  elif poly_ring_mod == None:
     if n < 0:
       raise ValueError("Cannot invert an element whose domain isn't a field (poly_ring_mod == None)")
-  if mod_is_irreducible:
+    if mod_is_irreducible:
       raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
   else:
-    if n < 0:
-      poly_field_order = pow(coeff_field_order, len(poly_ring_mod) + 1)
-      n = n % poly_field_order
-    if mod_is_irreducible:
-      n %= coeff_field_order ** (len(poly_ring_mod) - 1)
+      raise ValueError("poly_ring_mod must be a list")
 
   # Algorithm.
   while n > 0:
@@ -239,9 +249,7 @@ class PolyDense:
       *args,
       **kwargs):
     # check coeffs
-    if coeffs == None:
-      self._coeffs = []
-    elif isinstance(coeffs, list):
+    if isinstance(coeffs, list):
       self._coeffs = coeffs
     elif isinstance(coeffs, int):
       self._coeffs = [coeffs]
@@ -334,5 +342,9 @@ class PolyDense:
         coeff_field_order=self._coeff_field_order)
 
   # Alias for container class
-  def _poly(self):
+  def _poly(self) -> 'PolyDense':
     return self
+
+  def coeffs(self) -> list[int]:
+      return self._coeffs
+

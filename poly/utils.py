@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 def clear_leading_zeros(a: list[int]) -> list[int]:
   """
   Clears leading zeros from a list.
@@ -51,12 +53,7 @@ def poly_dense_to_sparse(dense: list[int]) -> dict[int, int]:
       sparse[deg] = coeff
   return sparse
 
-def poly_string(
-    poly: (list[int]|dict[int, int]),
-    space_after_coeff: bool=False,
-    order_increasing=True,
-    implicit_powers=True,
-    implicit_coeffs=True, **kwargs) -> str:
+def poly_string(poly: (list[int]|dict[int, int]), **kwargs) -> str:
   """
   Returns a string representation of a polynomial.
 
@@ -66,15 +63,38 @@ def poly_string(
   Returns:
     poly_str (str): The string representation of the polynomial.
   """
+
+  # Check param implicit_powers.
+  implicit_powers = True
+  if "implicit_powers" in kwargs:
+    if isinstance(kwargs["implicit_powers"], bool):
+      implicit_powers = kwargs["implicit_powers"]
+  # Check param implicit_coeffs.
+  implicit_coeffs = True
+  if "implicit_coeffs" in kwargs:
+    if isinstance(kwargs["implicit_coeffs"], bool):
+      implicit_coeffs = kwargs["implicit_coeffs"]
   # Check param mode.
   mode = "txt"
-  if mode in kwargs:
-    mode = kwargs["mode"]
+  if "mode" in kwargs:
+    if isinstance(kwargs["mode"], str):
+      mode = kwargs["mode"]
+  # Check param order_increasing
+  order_increasing = True
+  if "order_increasing" in kwargs:
+    if isinstance(kwargs["order_increasing"], bool):
+      order_increasing = kwargs["order_increasing"]
+  # Check param order_increasing
+  space_after_coeff = True
+  if "space_after_coeff" in kwargs:
+    if isinstance(kwargs["space_after_coeff"], bool):
+      order_increasing = kwargs["space_after_coeff"]
+
   # Convert polynomial to a list of (deg, coeff) pairs.
   deg_coeff_list = None
-  if poly.__class__ == dict:
+  if isinstance(poly, dict):
     deg_coeff_list = list(sorted(poly.items()))
-  elif poly.__class__ == list:
+  elif isinstance(poly, list):
     deg_coeff_list = list(enumerate(poly))
   else:
     raise ValueError(f"Invalid polynomial type: {poly.__class__}")
@@ -181,7 +201,7 @@ def poly_parse_string(poly_str: str, var: str) -> list[int]:
   return poly_sparse_to_dense(coeffs_map)
 
 
-def generalized_fast_pow(a, n: int, func: callable, *args, **kwargs):
+def generalized_fast_pow(a, n: int, func: Callable, *args, **kwargs):
   res = a.__deepcopy__() # Start out with first power since we don't know a^0
   n -= 1
 
@@ -191,7 +211,7 @@ def generalized_fast_pow(a, n: int, func: callable, *args, **kwargs):
       n = n - 1 # For mathematical clarity.
 
     a = func(a, a, *args, **kwargs)
-    n = n / 2
+    n = n // 2
 
   return res
 

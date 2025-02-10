@@ -130,6 +130,12 @@ def poly_sparse_quotient_remainder(
     q (dict[int, int]) The remainder.
     r (dict[int, int]) The quotient.
   """
+  
+  # FIXME: Support any ring.
+  if not isinstance(coeff_field_order, int):
+    raise ValueError("Currently only accepts prime field coefficients.")
+
+  # nz ~ nonzero.
   r_nz = sorted(a.keys(), reverse = True)
   b_nz = sorted(b.keys(), reverse = True)
 
@@ -143,17 +149,12 @@ def poly_sparse_quotient_remainder(
       b.copy(),
       coeff_field_order)
 
-  ct = 10
   for deg_r in r_nz:
+    # Euclidean function-check.
     if deg_r < deg_g:
       break
-
-    ct -= 1
-    if ct == 0:
-      break
-
+    # Already zero-check.
     if deg_r not in r_map:
-      # Term vanished in a prior round.
       continue
 
     # Subtract off a term.
@@ -177,7 +178,7 @@ def poly_sparse_quotient_remainder(
     if coeff_field_order != None:
       q_map[deg_r - deg_g] %= coeff_field_order
 
-  # Ensure proper form.
+  # Ensure all zeros are implicit.
   for deg, coeff in r_map.copy().items():
     if coeff == 0:
       del r_map[deg]
@@ -215,12 +216,17 @@ def poly_sparse_fast_pow(
       if mod_is_irreducible:
         raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
   else:
+    if len(poly_ring_mod) == 0:
+      raise ValueError("poly_ring_mod cannot be an empty dict.")
+    # Reduce the power modulo the order of the multiplicative group of 
+    # coeff_field_order[x] / (poly_ring_mod).
     poly_ring_mod_deg = max(poly_ring_mod.keys())
-    poly_field_order = pow(coeff_field_order, poly_ring_mod_deg)
-    if n < 0:
-      n = n % poly_field_order
-    if mod_is_irreducible:
-      n %= poly_field_order
+    if isinstance(coeff_field_order, int):
+      poly_field_order = pow(coeff_field_order, poly_ring_mod_deg)
+      if n < 0:
+        n = n % poly_field_order
+      if mod_is_irreducible:
+        n %= poly_field_order
 
   # Algorithm.
   while n > 0:
@@ -259,17 +265,15 @@ class PolySparse:
       coeff_field_order (int): mod for coefficient field.
     """
     # check coeffs
-    if coeffs == None:
-      raise ValueError(f"coeffs cannot be \"None\"")
-    elif coeffs.__class__ == dict:
+    if isinstance(coeffs, dict):
       self._coeffs = coeffs
-    elif coeffs.__class__ == int:
+    elif isinstance(coeffs, int):
       self._coeffs = {0:coeffs}
     else:
       raise ValueError(f"coeffs must be a dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
     if poly_ring_mod != None:
-      if poly_ring_mod.__class__ == dict:
+      if isinstance(poly_ring_mod, dict):
         self._poly_ring_mod = poly_ring_mod
       else:
         raise ValueError(f"poly_ring_mod must be a dictionary. recieved an instance of {poly_ring_mod.__class__}")
@@ -278,7 +282,7 @@ class PolySparse:
     # check coeff_field_order
     if coeff_field_order == None:
       self._coeff_field_order = None
-    elif coeff_field_order.__class__ == int:
+    elif isinstance(coeff_field_order, int):
       self._coeff_field_order = coeff_field_order
     else:
       raise ValueError(f"coeff_field_order must be an int. recieved an instance of {coeffs.__class__}")
@@ -354,5 +358,8 @@ class PolySparse:
         coeff_field_order=self._coeff_field_order)
 
   # Alias for container class
-  def _poly(self):
+  def _poly(self) -> 'PolySparse':
     return self
+
+  def coeffs(self) -> dict[int, int]:
+      return self._coeffs
