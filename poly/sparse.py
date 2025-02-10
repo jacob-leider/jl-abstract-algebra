@@ -1,8 +1,9 @@
+from poly.utils import *
 
 def poly_sparse_scale(
     s: int,
     a: dict[int, int],
-    coeff_field_order: int) -> dict[int, int]:
+    coeff_field_order: None | int) -> dict[int, int]:
   """
   Scales a sparse polynomial.
 
@@ -27,7 +28,7 @@ def poly_sparse_scale(
 def poly_sparse_add(
     a: dict[int, int],
     b: dict[int, int],
-    coeff_field_order: int) -> dict[int, int]:
+    coeff_field_order: int | None) -> dict[int, int]:
   """
   Adds two sparse polynomials.
 
@@ -58,7 +59,7 @@ def poly_sparse_add(
 def poly_sparse_subtract(
     a: dict[int, int],
     b: dict[int, int],
-    coeff_field_order: int) -> dict[int, int]:
+    coeff_field_order: int | None) -> dict[int, int]:
   """
   Subtracts two sparse polynomials.
 
@@ -77,8 +78,8 @@ def poly_sparse_subtract(
 def poly_sparse_multiply(
     a: dict[int, int],
     b: dict[int, int],
-    poly_ring_mod: dict[int, int],
-    coeff_field_order: int) -> dict[int, int]:
+    poly_ring_mod: None | dict[int, int],
+    coeff_field_order: None | int) -> dict[int, int]:
   c = {}
 
   for a_deg, a_coeff in a.items():
@@ -108,16 +109,14 @@ def degree_n_sparse_monomial(n: int):
     n (int): The degree of the monomial.
 
   Returns:
-    [0] * n + [1] The monomial of degree n.
+    The monomial of degree n.
   """
-  m = {}
-  m[n] = 1
-  return m
+  return {n : 1}
 
 def poly_sparse_quotient_remainder(
     a: dict[int, int],
     b: dict[int, int],
-    coeff_field_order: int) -> dict[int, int]:
+    coeff_field_order: None | int) -> tuple[dict[int, int], dict[int, int]]:
   """
   Reduces a (sparse) polynomial a(x) to the lowest degree (sparse) polynomial
   b(x) such that a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
@@ -140,7 +139,7 @@ def poly_sparse_quotient_remainder(
   deg_g = b_nz[0]
   leading_g_coeff_inv = pow(b[deg_g], -1, coeff_field_order)
   monic_b_map = poly_sparse_scale(
-      leading_g_coeff_inv,
+      leading_g_coeff_inv, # FIXME: This doesn't work with polynomial rings over general coefficient rings.
       b.copy(),
       coeff_field_order)
 
@@ -165,7 +164,7 @@ def poly_sparse_quotient_remainder(
         None,
         coeff_field_order)
     to_subtract = poly_sparse_scale(
-        leading_r_coeff,
+            leading_r_coeff,
         to_subtract,
         coeff_field_order)
     r_map = poly_sparse_subtract(r_map, to_subtract, coeff_field_order)
@@ -191,9 +190,9 @@ def poly_sparse_quotient_remainder(
 
 def poly_sparse_fast_pow(
     a: dict[int, int],
-    n: int, poly_ring_mod: list[int],
-    coeff_field_order: int,
-    mod_is_irreducible: bool=False) -> list[int]:
+    n: int, poly_ring_mod: None | dict[int, int],
+    coeff_field_order: int | None,
+    mod_is_irreducible: bool=False) -> dict[int, int]:
   """
   Raises a polynomial to a power.
 
@@ -209,20 +208,19 @@ def poly_sparse_fast_pow(
   res = {0: 1}
   factor = a.copy()
 
-  poly_ring_mod_deg = max(poly_ring_mod.keys())
-  poly_field_order = pow(coeff_field_order, poly_ring_mod_deg)
-
   # Error handling.
-  if n < 0:
-    if poly_ring_mod == None:
-      raise ValueError("Cannot invert an element whose domain isn't a field (poly_ring_mod == None)")
-    else:
+  if poly_ring_mod == None:
+      if n < 0:
+        raise ValueError("Cannot invert an element whose domain isn't a field (poly_ring_mod == None)")
+      if mod_is_irreducible:
+        raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
+  else:
+    poly_ring_mod_deg = max(poly_ring_mod.keys())
+    poly_field_order = pow(coeff_field_order, poly_ring_mod_deg)
+    if n < 0:
       n = n % poly_field_order
-
-  if mod_is_irreducible:
-    if poly_ring_mod == None:
-      raise ValueError("Cannot specify an irreducible modulus when no modulus provided")
-    n %= poly_field_order
+    if mod_is_irreducible:
+      n %= poly_field_order
 
   # Algorithm.
   while n > 0:
@@ -239,7 +237,7 @@ def poly_sparse_fast_pow(
         factor,
         poly_ring_mod,
         coeff_field_order)
-    n = n / 2
+    n = n // 2
 
   return res
 
@@ -247,8 +245,8 @@ def poly_sparse_fast_pow(
 class PolySparse:
   def __init__(
       self,
-      coeffs: dict[int, int],
-      poly_ring_mod=None,
+      coeffs: dict[int, int] | int,
+      poly_ring_mod: None | dict[int, int]=None,
       coeff_field_order=None,
       *args,
       **kwargs):
@@ -262,23 +260,19 @@ class PolySparse:
     """
     # check coeffs
     if coeffs == None:
-      self._coeffs = {}
+      raise ValueError(f"coeffs cannot be \"None\"")
     elif coeffs.__class__ == dict:
       self._coeffs = coeffs
-    elif coeffs.__class__ == list:
-      self._coeffs = poly_dense_to_sparse(coeffs)
     elif coeffs.__class__ == int:
       self._coeffs = {0:coeffs}
     else:
-      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
+      raise ValueError(f"coeffs must be a dictionary. recieved an instance of {coeffs.__class__}")
     # check poly_ring_mod
     if poly_ring_mod != None:
-      if poly_ring_mod.__class__ == list:
-        self._poly_ring_mod = poly_dense_to_sparse(poly_ring_mod)
-      elif poly_ring_mod.__class__ == dict:
+      if poly_ring_mod.__class__ == dict:
         self._poly_ring_mod = poly_ring_mod
       else:
-        raise ValueError(f"poly_ring_mod must be a list or dictionary. recieved an instance of {poly_ring_mod.__class__}")
+        raise ValueError(f"poly_ring_mod must be a dictionary. recieved an instance of {poly_ring_mod.__class__}")
     else:
       self._poly_ring_mod = None
     # check coeff_field_order
@@ -287,7 +281,7 @@ class PolySparse:
     elif coeff_field_order.__class__ == int:
       self._coeff_field_order = coeff_field_order
     else:
-      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
+      raise ValueError(f"coeff_field_order must be an int. recieved an instance of {coeffs.__class__}")
 
   def __str__(self):
     return poly_string(self._coeffs)
@@ -307,7 +301,7 @@ class PolySparse:
             self._coeffs,
             other._coeffs,
             coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self.poly_ring,
+        poly_ring_mod=self._poly_ring_mod,
         coeff_field_order=self._coeff_field_order)
 
   def __mul__(self, other):
