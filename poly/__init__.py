@@ -104,12 +104,11 @@ class Poly:
     return Poly(self._poly())
 
   def _poly(self) -> PolySparse | PolyDense:
-    if self._rep == None:
-        raise AttributeError(f"Poly object {self} contains an empty representation.")
-    elif not (isinstance(self._rep, PolyDense) or isinstance(self._rep, PolySparse)):
-        raise AttributeError(f"Poly object {self} contains neither a sparse or a dense representation.")
+    if not (isinstance(self._rep, PolyDense) or isinstance(self._rep, PolySparse)):
+      # This code should never be reached.
+      raise AttributeError(f"Poly object {self} contains neither a sparse or a dense representation.")
     else:
-        return self._rep
+      return self._rep
 
   def is_sparse(self):
     return isinstance(self._rep, PolySparse)

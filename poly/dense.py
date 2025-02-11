@@ -138,13 +138,15 @@ def poly_dense_quotient_remainder(
       r_leading_coeff = r[i]
       q.append((r_leading_coeff * b_leading_coeff_inv) % coeff_field_order)
       # Subtract off the leading term from the remainder.
-      to_subtract = poly_dense_scale(r_leading_coeff,
-                               monic_b,
-                               coeff_field_order)
-      to_subtract = poly_dense_multiply(degree_n_dense_monomial(len(r) - n),
-                                  to_subtract,
-                                  None,
-                                  coeff_field_order)
+      to_subtract = poly_dense_scale(
+          r_leading_coeff, 
+          monic_b, 
+          coeff_field_order)
+      to_subtract = poly_dense_multiply(degree_n_dense_monomial(
+          len(r) - n), 
+          to_subtract, 
+          None,
+          coeff_field_order)
       r = poly_dense_subtract(r, to_subtract, coeff_field_order)
 
   # Quotient terms currently in order of degree, decreasing.
@@ -301,10 +303,10 @@ class PolyDense:
   def __rmul__(self, other):
     if isinstance(other, int):
       return PolyDense(
-              poly_dense_scale(
-                  other,
-                  self._coeffs,
-                  coeff_field_order=self._coeff_field_order))
+          poly_dense_scale(
+              other,
+              self._coeffs,
+              coeff_field_order=self._coeff_field_order))
     elif isinstance(other, PolyDense):
       return other.__mul__(self)
     else:
@@ -313,12 +315,12 @@ class PolyDense:
   def __mul__(self, other):
     if isinstance(other, int):
       return PolyDense(
-              poly_dense_scale(
-                  other, 
-                  self._coeffs, 
-                  coeff_field_order=self._coeff_field_order),
-              poly_ring_mod=self._poly_ring_mod,
-              coeff_field_order=self._coeff_field_order)
+          poly_dense_scale(
+              other, 
+              self._coeffs, 
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
     elif isinstance(other, PolyDense):
       return PolyDense(
           poly_dense_multiply(

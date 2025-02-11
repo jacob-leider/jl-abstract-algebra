@@ -165,7 +165,7 @@ def poly_sparse_quotient_remainder(
         None,
         coeff_field_order)
     to_subtract = poly_sparse_scale(
-            leading_r_coeff,
+        leading_r_coeff,
         to_subtract,
         coeff_field_order)
     r_map = poly_sparse_subtract(r_map, to_subtract, coeff_field_order)
@@ -317,10 +317,10 @@ class PolySparse:
   def __rmul__(self, other):
     if isinstance(other, int):
       return PolySparse(
-              poly_sparse_scale(
-                  other,
-                  self._coeffs,
-                  coeff_field_order=self._coeff_field_order))
+          poly_sparse_scale(
+              other,
+              self._coeffs,
+              coeff_field_order=self._coeff_field_order))
     elif isinstance(other, PolySparse):
       return other.__mul__(self)
     else:
