@@ -308,15 +308,34 @@ class PolySparse:
         poly_ring_mod=self._poly_ring_mod,
         coeff_field_order=self._coeff_field_order)
 
+  def __rmul__(self, other):
+    if isinstance(other, int):
+      return PolySparse(
+              poly_sparse_scale(
+                  other,
+                  self._coeffs,
+                  coeff_field_order=self._coeff_field_order))
+    elif isinstance(other, PolySparse):
+      return other.__mul__(self)
+
   def __mul__(self, other):
-    return PolySparse(
-        poly_sparse_multiply(
-            self._coeffs,
-            other._coeffs,
-            poly_ring_mod=self._poly_ring_mod,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, int):
+      return PolySparse(
+              poly_sparse_scale(
+                  other,
+                  self._coeffs,
+                  coeff_field_order=self._coeff_field_order))
+    elif isinstance(other, PolySparse):
+      return PolySparse(
+          poly_sparse_multiply(
+              self._coeffs,
+              other._coeffs,
+              poly_ring_mod=self._poly_ring_mod,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __pow__(self, n):
     return PolySparse(
@@ -362,4 +381,10 @@ class PolySparse:
     return self
 
   def coeffs(self) -> dict[int, int]:
-      return self._coeffs
+    return self._coeffs
+
+  def coeff_field_order(self) -> int | None:
+    return self._coeff_field_order
+
+  def poly_ring_mod(self) -> dict[int,int] | None:
+    return self._poly_ring_mod

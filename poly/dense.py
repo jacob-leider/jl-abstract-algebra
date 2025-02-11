@@ -292,15 +292,37 @@ class PolyDense:
         poly_ring_mod=self._poly_ring_mod,
         coeff_field_order=self._coeff_field_order)
 
+  def __rmul__(self, other):
+    if isinstance(other, int):
+      return PolyDense(
+              poly_dense_scale(
+                  other,
+                  self._coeffs,
+                  coeff_field_order=self._coeff_field_order))
+    elif isinstance(other, PolyDense):
+      return other.__mul__(self)
+
+
   def __mul__(self, other):
-    return PolyDense(
-        poly_dense_multiply(
-            self._coeffs,
-            other._coeffs,
-            poly_ring_mod=self._poly_ring_mod,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, int):
+      return PolyDense(
+              poly_dense_scale(
+                  other, 
+                  self._coeffs, 
+                  coeff_field_order=self._coeff_field_order),
+              poly_ring_mod=self._poly_ring_mod,
+              coeff_field_order=self._coeff_field_order)
+    elif isinstance(other, PolyDense):
+      return PolyDense(
+          poly_dense_multiply(
+              self._coeffs,
+              other._coeffs,
+              poly_ring_mod=self._poly_ring_mod,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __pow__(self, n):
     return PolyDense(
@@ -335,6 +357,10 @@ class PolyDense:
         coeff_field_order=self._coeff_field_order)
     return q, r
 
+  def __call__(self, other):
+    if isinstance(other, PolyDense):
+      pass
+
   def __copy__(self):
     return PolyDense(
         self._coeffs.copy(),
@@ -347,4 +373,10 @@ class PolyDense:
 
   def coeffs(self) -> list[int]:
       return self._coeffs
+
+  def coeff_field_order(self) -> int | None:
+    return self._coeff_field_order
+
+  def poly_ring_mod(self) -> list[int] | None:
+    return self._poly_ring_mod
 

@@ -55,16 +55,34 @@ class Poly:
     return poly_string(self._poly()._coeffs, **kwargs)
 
   def __add__(self, other):
-    return Poly(self._poly() + other._poly())
+    if isinstance(other, Poly):
+      return Poly(self._poly() + other._poly())
+    else:
+      return Poly(self._poly() + other)
 
   def __sub__(self, other):
-    return Poly(self._poly() - other._poly())
+    if isinstance(other, Poly):
+      return Poly(self._poly() - other._poly())
+    else:
+      return Poly(self._poly() - other)
+
+  def __rmul__(self, other):
+    if isinstance(other, Poly):
+      return Poly(self._poly() * other._poly())
+    else:
+      return Poly(self._poly() * other)
 
   def __mul__(self, other):
-    return Poly(self._poly() * other._poly())
+    if isinstance(other, Poly):
+      return Poly(self._poly() * other._poly())
+    else:
+      return Poly(self._poly() * other)
 
   def __pow__(self, n):
-    return generalized_fast_pow(self, n, Poly.__mul__)
+    if isinstance(n, int):
+      return generalized_fast_pow(self, n, Poly.__mul__)
+    else:
+      return NotImplemented
 
   def __floordiv__(self, other):
     q, _ = self.__divmod__(other)
@@ -75,8 +93,12 @@ class Poly:
     return r
 
   def __divmod__(self, other):
-    q, r = self._poly().__divmod__(other._poly())
+    if isinstance(other, Poly):
+      q, r = self._poly().__divmod__(other._poly())
+    else:
+      q, r = self._poly().__divmod__(other)
     return Poly(q), Poly(r)
+
 
   def __deepcopy__(self):
     return Poly(self._poly())
@@ -93,4 +115,7 @@ class Poly:
     return isinstance(self._rep, PolySparse)
 
   def poly_ring_mod(self):
-    return self._poly()._poly_ring_mod
+    return self._poly().poly_ring_mod()
+
+  def coeff_field_order(self):
+    return self._poly().coeff_field_order()
