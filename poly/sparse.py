@@ -291,22 +291,28 @@ class PolySparse:
     return poly_string(self._coeffs)
 
   def __add__(self, other):
-    return PolySparse(
-        poly_sparse_add(
-            self._coeffs,
-            other._coeffs,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, PolySparse):
+      return PolySparse(
+          poly_sparse_add(
+              self._coeffs,
+              other._coeffs,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __sub__(self, other):
-    return PolySparse(
-        poly_sparse_subtract(
-            self._coeffs,
-            other._coeffs,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, PolySparse):
+        return PolySparse(
+            poly_sparse_subtract(
+                self._coeffs,
+                other._coeffs,
+                coeff_field_order=self._coeff_field_order),
+            poly_ring_mod=self._poly_ring_mod,
+            coeff_field_order=self._coeff_field_order)
+    else:
+        return NotImplemented
 
   def __rmul__(self, other):
     if isinstance(other, int):
@@ -317,6 +323,8 @@ class PolySparse:
                   coeff_field_order=self._coeff_field_order))
     elif isinstance(other, PolySparse):
       return other.__mul__(self)
+    else:
+      return NotImplemented
 
   def __mul__(self, other):
     if isinstance(other, int):
@@ -338,37 +346,45 @@ class PolySparse:
       return NotImplemented
 
   def __pow__(self, n):
-    return PolySparse(
-        poly_sparse_fast_pow(
-            self._coeffs,
-            n,
-            poly_ring_mod=self._poly_ring_mod,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(n, int):
+      return PolySparse(
+          poly_sparse_fast_pow(
+              self._coeffs,
+              n,
+              poly_ring_mod=self._poly_ring_mod,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __floordiv__(self, other):
-    q, r = self.__divmod__(other)
+    q, _ = self.__divmod__(other)
     return q
 
   def __mod__(self, other):
-    q, r = self.__divmod__(other)
+    _, r = self.__divmod__(other)
     return r
 
   def __divmod__(self, other):
-    q, r = poly_sparse_quotient_remainder(
-        self._coeffs,
-        other._coeffs,
-        coeff_field_order=self._coeff_field_order)
-    q = PolySparse(
-        q,
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
-    r = PolySparse(
-        r,
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
-    return q, r
+    # TODO: Scalar division makes sense. Just invert, scalar multiply, and 
+    # return a remainder of 0.
+    if isinstance(other, PolySparse):
+      q, r = poly_sparse_quotient_remainder(
+          self._coeffs,
+          other._coeffs,
+          coeff_field_order=self._coeff_field_order)
+      q = PolySparse(
+          q,
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+      r = PolySparse(
+          r,
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+      return q, r
+    else:
+      return NotImplemented
 
   def __copy__(self):
     return PolySparse(

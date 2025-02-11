@@ -33,7 +33,7 @@ class Poly:
           poly_ring_mod=poly_ring_mod,
           coeff_field_order=coeff_field_order)
     elif isinstance(coeffs, str):
-      # For now return a dense representation.
+      # For now return a dense representation. usually th
       try:
         coeffs_dense = poly_parse_string(coeffs, var="x")
       except SyntaxError:

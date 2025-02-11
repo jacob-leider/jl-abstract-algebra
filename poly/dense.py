@@ -275,22 +275,28 @@ class PolyDense:
     return poly_string(self._coeffs)
 
   def __add__(self, other):
-    return PolyDense(
-        poly_dense_add(
-            self._coeffs,
-            other._coeffs,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, PolyDense):
+      return PolyDense(
+         poly_dense_add(
+              self._coeffs,
+              other._coeffs,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __sub__(self, other):
-    return PolyDense(
-        poly_dense_subtract(
-            self._coeffs,
-            other._coeffs,
-            coeff_field_order=self._coeff_field_order),
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
+    if isinstance(other, PolyDense):
+      return PolyDense(
+          poly_dense_subtract(
+              self._coeffs,
+              other._coeffs,
+              coeff_field_order=self._coeff_field_order),
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+    else:
+      return NotImplemented
 
   def __rmul__(self, other):
     if isinstance(other, int):
@@ -301,7 +307,8 @@ class PolyDense:
                   coeff_field_order=self._coeff_field_order))
     elif isinstance(other, PolyDense):
       return other.__mul__(self)
-
+    else:
+      return NotImplemented
 
   def __mul__(self, other):
     if isinstance(other, int):
@@ -343,23 +350,24 @@ class PolyDense:
     return r
 
   def __divmod__(self, other):
-    q, r = poly_dense_quotient_remainder(
-        self._coeffs,
-        other._coeffs,
-        coeff_field_order=self._coeff_field_order)
-    q = PolyDense(
-        q,
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
-    r = PolyDense(
-        r,
-        poly_ring_mod=self._poly_ring_mod,
-        coeff_field_order=self._coeff_field_order)
-    return q, r
-
-  def __call__(self, other):
+    # TODO: Scalar division makes sense. Just invert, scalar multiply, and 
+    # return a remainder of 0.
     if isinstance(other, PolyDense):
-      pass
+      q, r = poly_dense_quotient_remainder(
+          self._coeffs,
+          other._coeffs,
+          coeff_field_order=self._coeff_field_order)
+      q = PolyDense(
+          q,
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+      r = PolyDense(
+          r,
+          poly_ring_mod=self._poly_ring_mod,
+          coeff_field_order=self._coeff_field_order)
+      return q, r
+    else:
+      return NotImplemented
 
   def __copy__(self):
     return PolyDense(
