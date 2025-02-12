@@ -118,3 +118,6 @@ class Poly:
 
   def coeff_field_order(self):
     return self._poly().coeff_field_order()
+
+  def coeffs(self) -> list[int] | dict[int, int]:
+    return self._poly().coeffs()
