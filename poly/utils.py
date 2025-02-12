@@ -85,7 +85,7 @@ def poly_string(poly: (list[int]|dict[int, int]), **kwargs) -> str:
     if isinstance(kwargs["order_increasing"], bool):
       order_increasing = kwargs["order_increasing"]
   # Check param order_increasing
-  space_after_coeff = True
+  space_after_coeff = False
   if "space_after_coeff" in kwargs:
     if isinstance(kwargs["space_after_coeff"], bool):
       order_increasing = kwargs["space_after_coeff"]
@@ -98,49 +98,38 @@ def poly_string(poly: (list[int]|dict[int, int]), **kwargs) -> str:
     deg_coeff_list = list(enumerate(poly))
   else:
     raise ValueError(f"Invalid polynomial type: {poly.__class__}")
+
   if not order_increasing:
     deg_coeff_list.reverse()
+
   # Build a list of monomial strings.
   mono_str_vec = []
   for deg, coeff in deg_coeff_list:
     if coeff != 0:
+      # Cases where coefficient may be implicit. 
+      c1 = (deg != 0) and (coeff in (1, -1))
+      c2 = (deg == 0) and not implicit_powers
       # Coefficient.
-      if coeff == 1:
-        if implicit_coeffs & deg > 0: # if deg == 0, coeff must be explicit.
-          mono_str = ""
-        else:
-          mono_str = "1"
-      elif coeff == -1:
-        if implicit_coeffs:
-          mono_str = "-"
-        else:
-          mono_str = "-1"
+      mono_str = ""
+      if implicit_coeffs and (c1 or c2):
+        if coeff == -1:
+          mono_str += "-"
       else:
-        mono_str = f"{coeff}"
-      # Space.
-      if space_after_coeff:
-        mono_str += " "
+        mono_str += str(coeff)
+        if space_after_coeff:
+          mono_str += " "
       # Variable (x^).
-      if deg == 0:
-        if implicit_powers:
-          mono_str_vec.append(mono_str)
-          continue
-        else:
-          mono_str += "x^"
-      elif deg == 1:
-        if implicit_powers:
-          mono_str += "x"
-          mono_str_vec.append(mono_str)
-          continue
-        else:
-          mono_str += "x^"
+      if (deg == 0) and implicit_powers:
+        mono_str_vec.append(mono_str)
+        continue
       else:
-        mono_str += "x^"
-      # Exponent.
-      if mode == "latex":
-        mono_str += "{" + str(deg) + "}"
-      else:
-        mono_str += str(deg)
+        mono_str += "x"
+        if (deg > 1) or (not implicit_powers):
+          mono_str += "^"
+          if mode == "latex":
+            mono_str += "{" + str(deg) + "}" 
+          else: 
+            mono_str += str(deg)
       # Done.
       mono_str_vec.append(mono_str)
 
