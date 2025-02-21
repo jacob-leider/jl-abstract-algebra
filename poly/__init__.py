@@ -19,9 +19,13 @@ from .utils import *
 
 
 def make_sparse(poly, **kwargs) -> dict | None:
+    """
+    Convert an `coeffs` argument to a dict.
+    """
+    # Convert object to dict/list
     if isinstance(poly, Poly) or isinstance(poly, PolyDense) or isinstance(poly, PolySparse):
         poly = poly.coeffs()
-
+    # Convert dict/list to list.
     if isinstance(poly, list):
         return poly_dense_to_sparse(poly)
     elif isinstance(poly, dict):
@@ -39,10 +43,15 @@ def make_sparse(poly, **kwargs) -> dict | None:
     else:
         return None
 
+
 def make_dense(poly, **kwargs) -> list | None:
+    """
+    Convert an `coeffs` argument to a list.
+    """
+    # Convert object to dict/list
     if isinstance(poly, Poly) or isinstance(poly, PolyDense) or isinstance(poly, PolySparse):
         poly = poly.coeffs()
-
+    # Convert dict/list to list.
     if isinstance(poly, list):
         return poly
     elif isinstance(poly, dict):
@@ -62,24 +71,23 @@ def make_dense(poly, **kwargs) -> list | None:
 
 
 def determine_rep(coeffs, **kwargs):
-    rep = "dense"
-
-    # Second highest priority.
-    if isinstance(coeffs, PolyDense) or isinstance(coeffs, list):
-        rep = "dense"
-    elif isinstance(coeffs, PolySparse) or isinstance(coeffs, dict):
-        rep = "sparse"
-
-    # Highest priority.
+    """
+    Determine the representation of a Poly based on constructor args. 
+    """
     if "rep" in kwargs:
+        # Highest priority.
         if kwargs["rep"] == "dense":
-            pass
+            return "dense"
         elif kwargs["rep"] == "sparse":
-            pass
+            return "sparse" 
         else:
             raise ValueError("keyword arg rep must be \"dense\" or \"sparse\"")
-
-    return rep
+    else:
+        # Second highest priority.
+        if isinstance(coeffs, PolyDense) or isinstance(coeffs, list):
+            return "dense"
+        elif isinstance(coeffs, PolySparse) or isinstance(coeffs, dict):
+            return "sparse"
 
 
 class Poly:
@@ -90,9 +98,8 @@ class Poly:
       coeff_field_order: int | None=None,
       *args,
       **kwargs):
-    rep = determine_rep(coeffs, **kwargs)
-
-    if rep == "dense":
+    if determine_rep(coeffs, **kwargs) == "dense":
+        # Dense rep.
         dense_coeffs = make_dense(coeffs, **kwargs)
         if dense_coeffs is None:
             raise ValueError(f"bad coeffs (type = {type(coeffs)})")
@@ -101,7 +108,8 @@ class Poly:
                     dense_coeffs,
                     poly_ring_mod=make_dense(poly_ring_mod, **kwargs),
                     coeff_field_order=coeff_field_order)
-    else: # rep == "sparse"
+    else: 
+        # Sparse rep.
         sparse_coeffs = make_sparse(coeffs, **kwargs)
         if sparse_coeffs is None:
             raise ValueError(f"bad coeffs (type = {type(coeffs)})")
