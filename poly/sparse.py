@@ -2,18 +2,18 @@ from poly.utils import *
 
 def poly_sparse_scale(
     s: int,
-    a: dict[int, int],
-    coeff_field_order: None | int) -> dict[int, int]:
+    a: dict,
+    coeff_field_order: None | int) -> dict:
   """
   Scales a sparse polynomial.
 
   Args:
     s (int): The scalar.
-    a (dict[int, int]): The sparse polynomial to scale.
+    a (dict): The sparse polynomial to scale.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    scaled_a (dict[int, int]) The scaled sparse polynomial.
+    scaled_a (dict) The scaled sparse polynomial.
   """
   scaled_a = {}
   for deg, coeff in a.items():
@@ -26,19 +26,19 @@ def poly_sparse_scale(
 
 
 def poly_sparse_add(
-    a: dict[int, int],
-    b: dict[int, int],
-    coeff_field_order: int | None) -> dict[int, int]:
+    a: dict,
+    b: dict,
+    coeff_field_order: int | None) -> dict:
   """
   Adds two sparse polynomials.
 
   Args:
-    a (dict[int, int]): The first sparse polynomial.
-    b (dict[int, int]): The second sparse polynomial.
+    a (dict): The first sparse polynomial.
+    b (dict): The second sparse polynomial.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    c (dict[int, int]) The sum of the two sparse polynomials.
+    c (dict) The sum of the two sparse polynomials.
   """
   c = a.copy()
 
@@ -57,29 +57,29 @@ def poly_sparse_add(
 
 
 def poly_sparse_subtract(
-    a: dict[int, int],
-    b: dict[int, int],
-    coeff_field_order: int | None) -> dict[int, int]:
+    a: dict,
+    b: dict,
+    coeff_field_order: int | None) -> dict:
   """
   Subtracts two sparse polynomials.
 
   Args:
-    a (dict[int, int]): The first polynomial.
-    b (dict[int, int]): The second polynomial.
+    a (dict): The first polynomial.
+    b (dict): The second polynomial.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    c (dict[int, int]) The sum a - b.
+    c (dict) The sum a - b.
   """
   neg_b = poly_sparse_scale(-1, b, coeff_field_order)
   return poly_sparse_add(a, neg_b, coeff_field_order)
 
 
 def poly_sparse_multiply(
-    a: dict[int, int],
-    b: dict[int, int],
-    poly_ring_mod: None | dict[int, int],
-    coeff_field_order: None | int) -> dict[int, int]:
+    a: dict,
+    b: dict,
+    poly_ring_mod: None | dict,
+    coeff_field_order: None | int) -> dict:
   c = {}
 
   for a_deg, a_coeff in a.items():
@@ -114,21 +114,21 @@ def degree_n_sparse_monomial(n: int):
   return {n : 1}
 
 def poly_sparse_quotient_remainder(
-    a: dict[int, int],
-    b: dict[int, int],
-    coeff_field_order: None | int) -> tuple[dict[int, int], dict[int, int]]:
+    a: dict,
+    b: dict,
+    coeff_field_order: None | int) -> tuple[dict, dict]:
   """
   Reduces a (sparse) polynomial a(x) to the lowest degree (sparse) polynomial
   b(x) such that a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
 
   Args:
-    a (dict[int, int]): The polynomial to reduce.
-    b (dict[int, int]): Mod for the polynomial ring.
+    a (dict): The polynomial to reduce.
+    b (dict): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    q (dict[int, int]) The remainder.
-    r (dict[int, int]) The quotient.
+    q (dict) The remainder.
+    r (dict) The quotient.
   """
   
   # FIXME: Support any ring.
@@ -190,10 +190,10 @@ def poly_sparse_quotient_remainder(
 
 
 def poly_sparse_fast_pow(
-    a: dict[int, int],
-    n: int, poly_ring_mod: None | dict[int, int],
+    a: dict,
+    n: int, poly_ring_mod: None | dict,
     coeff_field_order: int | None,
-    mod_is_irreducible: bool=False) -> dict[int, int]:
+    mod_is_irreducible: bool=False) -> dict:
   """
   Raises a polynomial to a power.
 
@@ -251,8 +251,8 @@ def poly_sparse_fast_pow(
 class PolySparse:
   def __init__(
       self,
-      coeffs: dict[int, int] | int,
-      poly_ring_mod: None | dict[int, int]=None,
+      coeffs: dict | int,
+      poly_ring_mod: None | dict=None,
       coeff_field_order=None,
       *args,
       **kwargs):
@@ -260,7 +260,7 @@ class PolySparse:
     Sparse representation of an element of a polynomial ring.
 
     Args:
-      coeffs (list[int] | dict[int, int]): The coefficients of the polynomial.
+      coeffs (list[int] | dict): The coefficients of the polynomial.
       poly_ring_mod (list[int] | dict[int,int]): Mod for the polynomial ring.
       coeff_field_order (int): mod for coefficient field.
     """
@@ -396,7 +396,7 @@ class PolySparse:
   def _poly(self) -> 'PolySparse':
     return self
 
-  def coeffs(self) -> dict[int, int]:
+  def coeffs(self) -> dict:
     return self._coeffs
 
   def coeff_field_order(self) -> int | None:

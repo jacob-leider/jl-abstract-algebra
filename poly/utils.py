@@ -89,6 +89,11 @@ def poly_string(poly: (list[int]|dict[int, int]), **kwargs) -> str:
   if "space_after_coeff" in kwargs:
     if isinstance(kwargs["space_after_coeff"], bool):
       order_increasing = kwargs["space_after_coeff"]
+  # Check param var
+  var = "x"
+  if "var" in kwargs:
+      if isinstance(kwargs["var"], str):
+          var = kwargs["var"]
 
   # Convert polynomial to a list of (deg, coeff) pairs.
   deg_coeff_list = None
@@ -123,7 +128,7 @@ def poly_string(poly: (list[int]|dict[int, int]), **kwargs) -> str:
         mono_str_vec.append(mono_str)
         continue
       else:
-        mono_str += "x"
+        mono_str += f"{var}"
         if (deg > 1) or (not implicit_powers):
           mono_str += "^"
           if mode == "latex":

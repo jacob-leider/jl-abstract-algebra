@@ -1,20 +1,20 @@
 from poly.utils import *
 
 def poly_dense_add(
-    a: list[int],
-    b: list[int],
-    coeff_field_order: int | None) -> list[int]:
+    a: list,
+    b: list,
+    coeff_field_order: int | None) -> list:
   """
   Adds two polynomials.
 
   Args:
-    poly_ring_mod (list[int]): Mod for the polynomial ring.
+    poly_ring_mod (list): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
-    a (list[int]): The first polynomial.
-    b (list[int]): The second polynomial.
+    a (list): The first polynomial.
+    b (list): The second polynomial.
 
   Returns:
-    c (list[int]) The sum of the two polynomials.
+    c (list) The sum of the two polynomials.
   """
   c = [0] * max(len(a), len(b))
 
@@ -34,20 +34,20 @@ def poly_dense_add(
 
 
 def poly_dense_subtract(
-    a: list[int],
-    b: list[int],
-    coeff_field_order: int | None) -> list[int]:
+    a: list,
+    b: list,
+    coeff_field_order: int | None) -> list:
   """
   Subtracts two polynomials.
 
   Args:
-    a (list[int]): The first polynomial.
-    b (list[int]): The second polynomial.
-    poly_ring_mod (list[int]): Mod for the polynomial ring.
+    a (list): The first polynomial.
+    b (list): The second polynomial.
+    poly_ring_mod (list): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    c (list[int]) The difference `a` - `b` of the two polynomials.
+    c (list) The difference `a` - `b` of the two polynomials.
   """
   neg_b = poly_dense_scale(-1, b, coeff_field_order)
   return poly_dense_add(a, neg_b, coeff_field_order)
@@ -55,18 +55,18 @@ def poly_dense_subtract(
 
 def poly_dense_scale(
     s: int,
-    a: list[int],
-    coeff_field_order: int | None) -> list[int]:
+    a: list,
+    coeff_field_order: int | None) -> list:
   """
   Scales a polynomial.
 
   Args:
     s (int): The scalar.
-    a (list[int]): The polynomial to scale.
+    a (list): The polynomial to scale.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    a (list[int]) The scaled polynomial.
+    a (list) The scaled polynomial.
   """
   scaled_a = a.copy()
 
@@ -92,21 +92,21 @@ def degree_n_dense_monomial(n: int):
 
 
 def poly_dense_quotient_remainder(
-    a: list[int],
-    b: list[int],
-    coeff_field_order: int | None) -> tuple[list[int], list[int]]:
+    a: list,
+    b: list,
+    coeff_field_order: int | None) -> tuple[list, list]:
   """
   Reduces a polynomial a(x) to the lowest degree polynomial b(x) such that
   a(x) = b(x) + g(x)poly_ring_mod(x) for some g(x).
 
   Args:
-    a (list[int]): The polynomial to reduce.
-    b (list[int]): Mod for the polynomial ring.
+    a (list): The polynomial to reduce.
+    b (list): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
 
   Returns:
-    q (list[int]) The quotient.
-    r (list[int]) The remainder.
+    q (list) The quotient.
+    r (list) The remainder.
   """
 
   if not isinstance(coeff_field_order, int):
@@ -156,21 +156,21 @@ def poly_dense_quotient_remainder(
 
 
 def poly_dense_multiply(
-    a: list[int],
-    b: list[int],
-    poly_ring_mod: list[int] | None,
-    coeff_field_order: int | None) -> list[int]:
+    a: list,
+    b: list,
+    poly_ring_mod: list | None,
+    coeff_field_order: int | None) -> list:
   """
   Multiplies two polynomials.
 
   Args:
-    poly_ring_mod (list[int]): Mod for the polynomial ring.
+    poly_ring_mod (list): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
-    a (list[int]): The first polynomial.
-    b (list[int]): The second polynomial.
+    a (list): The first polynomial.
+    b (list): The second polynomial.
 
   Returns:
-    c (list[int]) The product of the two polynomials.
+    c (list) The product of the two polynomials.
   """
   c = [0] * (len(a) + len(b))
 
@@ -191,22 +191,22 @@ def poly_dense_multiply(
 
 
 def poly_dense_fast_pow(
-    a: list[int],
+    a: list,
     n: int,
-    poly_ring_mod: list[int] | None,
+    poly_ring_mod: list | None,
     coeff_field_order: int | None,
-    mod_is_irreducible: bool=False) -> list[int]:
+    mod_is_irreducible: bool=False) -> list:
   """
   Raises a polynomial to a power.
 
   Args:
-    poly_ring_mod (list[int]): Mod for the polynomial ring.
+    poly_ring_mod (list): Mod for the polynomial ring.
     coeff_field_order (int): mod for coefficient field.
-    a (list[int]): The polynomial to raise to a power.x
+    a (list): The polynomial to raise to a power.x
     n (int): The power to raise the polynomial to.
 
   Returns:
-    a (list[int]) The polynomial raised to the power.
+    a (list) The polynomial raised to the power.
   """
   res = [1]
   factor = a.copy()
@@ -245,8 +245,8 @@ def poly_dense_fast_pow(
 class PolyDense:
   def __init__(
       self,
-      coeffs: list[int] | int,
-      poly_ring_mod: list[int] | None=None,
+      coeffs: list | int,
+      poly_ring_mod: list | None=None,
       coeff_field_order: int | None=None,
       *args,
       **kwargs):
@@ -381,12 +381,12 @@ class PolyDense:
   def _poly(self) -> 'PolyDense':
     return self
 
-  def coeffs(self) -> list[int]:
+  def coeffs(self) -> list:
       return self._coeffs
 
   def coeff_field_order(self) -> int | None:
     return self._coeff_field_order
 
-  def poly_ring_mod(self) -> list[int] | None:
+  def poly_ring_mod(self) -> list | None:
     return self._poly_ring_mod
 
