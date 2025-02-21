@@ -251,7 +251,7 @@ def poly_sparse_fast_pow(
 class PolySparse:
   def __init__(
       self,
-      coeffs: dict | int,
+      coeffs: dict,
       poly_ring_mod: None | dict=None,
       coeff_field_order=None,
       *args,
@@ -264,28 +264,9 @@ class PolySparse:
       poly_ring_mod (list[int] | dict[int,int]): Mod for the polynomial ring.
       coeff_field_order (int): mod for coefficient field.
     """
-    # check coeffs
-    if isinstance(coeffs, dict):
-      self._coeffs = coeffs
-    elif isinstance(coeffs, int):
-      self._coeffs = {0:coeffs}
-    else:
-      raise ValueError(f"coeffs must be a dictionary. recieved an instance of {coeffs.__class__}")
-    # check poly_ring_mod
-    if poly_ring_mod != None:
-      if isinstance(poly_ring_mod, dict):
-        self._poly_ring_mod = poly_ring_mod
-      else:
-        raise ValueError(f"poly_ring_mod must be a dictionary. recieved an instance of {poly_ring_mod.__class__}")
-    else:
-      self._poly_ring_mod = None
-    # check coeff_field_order
-    if coeff_field_order == None:
-      self._coeff_field_order = None
-    elif isinstance(coeff_field_order, int):
-      self._coeff_field_order = coeff_field_order
-    else:
-      raise ValueError(f"coeff_field_order must be an int. recieved an instance of {coeffs.__class__}")
+    self._coeffs = coeffs
+    self._poly_ring_mod = poly_ring_mod
+    self._coeff_field_order = coeff_field_order
 
   def __str__(self):
     return poly_string(self._coeffs)

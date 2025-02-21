@@ -245,33 +245,15 @@ def poly_dense_fast_pow(
 class PolyDense:
   def __init__(
       self,
-      coeffs: list | int,
+      coeffs: list,
       poly_ring_mod: list | None=None,
       coeff_field_order: int | None=None,
       *args,
       **kwargs):
     # check coeffs
-    if isinstance(coeffs, list):
-      self._coeffs = coeffs
-    elif isinstance(coeffs, int):
-      self._coeffs = [coeffs]
-    else:
-      raise ValueError(f"coeffs must be a list or dictionary. recieved an instance of {coeffs.__class__}")
-    # check poly_ring_mod
-    if poly_ring_mod != None:
-      if poly_ring_mod.__class__ == list:
-        self._poly_ring_mod = poly_ring_mod
-      else:
-        raise ValueError(f"poly_ring_mod must be a list or dictionary. recieved an instance of {poly_ring_mod.__class__}")
-    else:
-      self._poly_ring_mod = None
-    # check coeff_field_order
-    if coeff_field_order == None:
-      self._coeff_field_order = None
-    elif coeff_field_order.__class__ == int:
-      self._coeff_field_order = coeff_field_order
-    else:
-      raise ValueError(f"coeff_field_order must be a list or dictionary. recieved an instance of {coeff_field_order.__class__}")
+    self._coeffs = coeffs
+    self._poly_ring_mod = poly_ring_mod
+    self._coeff_field_order = coeff_field_order
 
   def __str__(self):
     return poly_string(self._coeffs)
